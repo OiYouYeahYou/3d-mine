@@ -1,17 +1,22 @@
 import React, { Component } from 'react'
 import './App.css'
-import { MineMap } from './js/Map'
+import { Game } from './js/Game'
 
-const height = 10
-const width = 10
-const bombsToStart = 10
+const layers = 4
+const height = 12
+const width = 12
+const bombsToStart = 25
 
-let map = new MineMap(height, width, bombsToStart)
+let game = new Game(layers, height, width, bombsToStart)
 let reveal = false
+let showBrakedown = false
+
+let hoveredTile
+const hover = tile => (hoveredTile = tile)
 
 class App extends Component {
 	render() {
-		const { hasWon, dead, BombCount } = map
+		const { dead, hasWon, BombCount } = game
 		let gameText = 'Keep Going'
 
 		if (hasWon) {
@@ -30,7 +35,7 @@ class App extends Component {
 				<br />
 				<span
 					onClick={() => {
-						map = new MineMap(height, width, bombsToStart)
+						game = new Game(layers, height, width, bombsToStart)
 						update()
 					}}
 				>
@@ -46,9 +51,58 @@ class App extends Component {
 					reveal
 				</span>
 				<br />
+				<span
+					onClick={e => {
+						e.preventDefault()
+						showBrakedown = !showBrakedown
+						update()
+					}}
+				>
+					Neigbours:
+					{showBrakedown ? (
+						<table
+							style={{
+								margin: '0px auto',
+							}}
+						>
+							<tbody>
+								<tr>
+									<td>All:</td>
+									<td style={{ width: '2em' }}>
+										{hoveredTile && hoveredTile.counts.all}
+									</td>
+								</tr>
+								<tr>
+									<td>Face:</td>
+									<td style={{ width: '2em' }}>
+										{hoveredTile && hoveredTile.counts.face}
+									</td>
+								</tr>
+								<tr>
+									<td>Edge:</td>
+									<td style={{ width: '2em' }}>
+										{hoveredTile && hoveredTile.counts.edge}
+									</td>
+								</tr>
+								<tr>
+									<td>Vertex:</td>
+									<td style={{ width: '2em' }}>
+										{hoveredTile && hoveredTile.counts.vert}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					) : null}
+				</span>
 				<br />
-				<Field map={map} update={update} />
-				<Field map={map} update={update} />
+				<br />
+				{game.layerArray.map(layer => (
+					<Field
+						map={layer}
+						update={update}
+						key={`layer-${layer.z}`}
+					/>
+				))}
 			</div>
 		)
 	}
@@ -59,28 +113,32 @@ class Field extends Component {
 		const { map, update } = this.props
 
 		return (
-			<table
+			<div
 				style={{
 					margin: '0px auto',
 					border: '3px',
 					borderStyle: 'solid',
+					display: 'inline-block',
 				}}
 			>
-				<tbody>
-					{Object.values(map.rows).map((row, x) => (
-						<tr key={`row-${x}`}>
-							{row.map((tile, y) => (
-								<Tile
-									key={`tile-${y}-${x}`}
-									map={map}
-									tile={tile}
-									update={update}
-								/>
-							))}
-						</tr>
-					))}
-				</tbody>
-			</table>
+				<table>
+					<tbody>
+						{Object.values(map.rows).map((row, x) => (
+							<tr key={`row-${x}`}>
+								{row.map((tile, y) => (
+									<Tile
+										key={`tile-${y}-${x}`}
+										map={map}
+										tile={tile}
+										update={update}
+									/>
+								))}
+							</tr>
+						))}
+					</tbody>
+				</table>
+				bombs: {map.BombCount}
+			</div>
 		)
 	}
 }
@@ -88,20 +146,25 @@ class Field extends Component {
 class Tile extends Component {
 	render() {
 		const { tile, update, map } = this.props
-		const { x, y, hasBomb, neighbourBombCount, open, flagged } = tile
+		const { x, y, z, hasBomb, neighbourBombCount, open, flagged } = tile
 
 		let content = ''
 		let colour = 'aqua'
 
-		if (open || map.dead || map.hasWon || reveal) {
+		if (open || game.dead || game.hasWon || reveal) {
 			if (hasBomb) {
-				colour = map.hasWon ? 'green' : 'red'
+				colour = game.hasWon ? 'green' : 'red'
 				content = 'x'
 			} else if (neighbourBombCount === 0) {
 				content = ''
 				colour = 'white'
 			} else {
 				content = neighbourBombCount
+				// - tile.neigbours.reduce((acc, tile) => acc + tile.flagged, 0)
+
+				if (content === 0) {
+					content = '.'
+				}
 				colour = 'white'
 			}
 		} else if (flagged) {
@@ -115,20 +178,38 @@ class Tile extends Component {
 					width: '1.5em',
 					height: '1.5em',
 					background: colour,
-					padding: '3px',
+					margin: '0',
+					padding: '0',
+					border: '1px',
+					borderStyle: 'solid',
+					borderColor:
+						hoveredTile && hoveredTile.neigbours.includes(tile)
+							? 'black'
+							: 'white',
 				}}
 				onClick={() => {
-					map.open(x, y)
+					game.open(x, y, z)
 					update()
 				}}
 				onDoubleClick={event => {
 					event.preventDefault()
-					map.takeABet(x, y)
+					game.takeABet(x, y, z)
 					update()
 				}}
 				onContextMenu={event => {
 					event.preventDefault()
 					tile.flagged = !tile.flagged
+					update()
+				}}
+				onWheel={e => console.log(e)}
+				onMouseEnter={e => {
+					e.preventDefault()
+					hover(tile)
+					update()
+				}}
+				onMouseLeave={e => {
+					e.preventDefault()
+					hoveredTile = null
 					update()
 				}}
 			>

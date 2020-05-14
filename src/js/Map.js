@@ -1,5 +1,5 @@
 export class MineMap {
-	constructor(height, width, bombCount) {
+	constructor(height, width, bombs) {
 		const tiles = (this.tiles = {})
 		const tileArray = (this.tileArray = [])
 		const rows = (this.rows = {})
@@ -11,15 +11,6 @@ export class MineMap {
 			rows[i] = []
 		}
 
-		const bombs = Array.from(
-			{ length: height * width },
-			(_, i) => bombCount > i
-		)
-
-		shuffle(bombs)
-		shuffle(bombs)
-		shuffle(bombs)
-
 		for (var y = 0; y < width; y++) {
 			const col = (tiles[y] = {})
 
@@ -30,32 +21,13 @@ export class MineMap {
 					hasBomb: bombs.shift(),
 					flagged: false,
 					opened: false,
+					layer: undefined,
 				})
 
 				rows[y].push(tile)
 				tileArray.push(tile)
 			}
 		}
-
-		tileArray.forEach(tile => {
-			const { x, y } = tile
-			const neigbours = [
-				this.getTile(x + 0, y - 1),
-				this.getTile(x + 1, y - 1),
-				this.getTile(x + 1, y + 0),
-				this.getTile(x + 1, y + 1),
-				this.getTile(x + 0, y + 1),
-				this.getTile(x - 1, y + 1),
-				this.getTile(x - 1, y + 0),
-				this.getTile(x - 1, y - 1),
-			].filter(Boolean)
-
-			tile.neigbours = neigbours
-			tile.neighbourBombCount = neigbours.reduce(
-				(cnt, { hasBomb }) => cnt + hasBomb,
-				0
-			)
-		})
 	}
 
 	getTile(x, y) {
@@ -100,29 +72,13 @@ export class MineMap {
 		}
 	}
 
-	takeABet(x, y) {
-		const tile = this.getTile(x, y)
-		const { neigbours, neighbourBombCount } = tile
-		const flaggedNeighbours = neigbours.filter(tile => tile.flagged)
-
-		if (flaggedNeighbours.length !== neighbourBombCount) {
-			return
-		}
-
-		const neigboursToOpen = neigbours.filter(
-			({ open, flagged }) => !open && !flagged
-		)
-
-		neigboursToOpen.forEach(({ x, y }) => this.open(x, y))
-	}
-
 	get BombCount() {
 		let bombs = 0
 		let flagged = 0
 
 		for (const tile of this.tileArray) {
 			bombs += tile.hasBomb
-			flagged += tile.flagged
+			flagged += !tile.open && tile.flagged
 		}
 
 		return bombs - flagged
@@ -144,12 +100,5 @@ export class MineMap {
 		}
 
 		return true
-	}
-}
-
-function shuffle(a) {
-	for (let i = a.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1))
-		;[a[i], a[j]] = [a[j], a[i]]
 	}
 }
