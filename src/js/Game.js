@@ -20,10 +20,10 @@ export class Game {
 			layers[i] = map
 			map.z = i
 			this.layerArray.push(map)
-			map.tileArray.forEach(tile => {
+			for (const tile of map.tileArray) {
 				tile.z = i
 				this.tileArray.push(tile)
-			})
+			}
 		}
 
 		tileArray.forEach(tile => {
