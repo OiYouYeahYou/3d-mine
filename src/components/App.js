@@ -4,7 +4,7 @@ import { game, newGame, toggleReveal, hoveredTile } from '../glue'
 
 export class App extends Component {
 	state = {
-		showBrakedown: true,
+		showBrakedown: false,
 	}
 
 	render() {
