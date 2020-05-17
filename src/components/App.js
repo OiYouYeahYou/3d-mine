@@ -20,7 +20,10 @@ export class App extends Component {
 		const update = () => this.forceUpdate()
 
 		return (
-			<div className="App">
+			<div
+				className="App"
+				onContextMenu={event => event.preventDefault()}
+			>
 				bombs: {BombCount}
 				<br />
 				{gameText}

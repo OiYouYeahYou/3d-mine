@@ -3,8 +3,8 @@ import { game, reveal, hoveredTile, hover } from '../glue'
 
 export class Tile extends Component {
 	render() {
-		const { tile, update } = this.props
-		const { x, y, z, hasBomb, neighbourBombCount, open, flagged } = tile
+		const { tile } = this.props
+		const { hasBomb, neighbourBombCount, open, flagged } = tile
 
 		let content = ''
 		let colour = 'aqua'
@@ -45,34 +45,70 @@ export class Tile extends Component {
 							? 'black'
 							: 'white',
 				}}
-				onClick={() => {
-					game.open(x, y, z)
-					update()
-				}}
-				onDoubleClick={event => {
-					event.preventDefault()
-					game.takeABet(x, y, z)
-					update()
-				}}
-				onContextMenu={event => {
-					event.preventDefault()
-					tile.flagged = !tile.flagged
-					update()
-				}}
-				onWheel={e => console.log(e)}
-				onMouseEnter={e => {
-					e.preventDefault()
-					hover(tile)
-					update()
-				}}
-				onMouseLeave={e => {
-					e.preventDefault()
-					hover(null)
-					update()
-				}}
+				onMouseUp={this.onMouseUp.bind(this)}
+				onDoubleClick={this.takeABet.bind(this)}
+				onMouseEnter={this.setCursor.bind(this)}
 			>
 				{content}
 			</td>
 		)
+	}
+
+	/**
+	 * @param {React.MouseEvent<HTMLTableDataCellElement, MouseEvent>} event
+	 */
+	onMouseUp(event) {
+		switch (event.button) {
+			case 0: // left
+				this.openTile(event)
+				break
+			case 1: // middle
+				this.takeABet(event)
+				break
+			case 2: // right
+				this.setFlag(event)
+				break
+			case 3: // back button
+			case 4: // forward button
+			default:
+				break
+		}
+	}
+
+	/**
+	 * @param {React.MouseEvent<HTMLTableDataCellElement, MouseEvent>} event
+	 */
+	takeABet(event) {
+		const { x, y, z } = this.props.tile
+		event.preventDefault()
+		game.takeABet(x, y, z)
+		this.props.update()
+	}
+
+	/**
+	 * @param {React.MouseEvent<HTMLTableDataCellElement, MouseEvent>} event
+	 */
+	openTile(event) {
+		const { x, y, z } = this.props.tile
+		event.preventDefault()
+		game.open(x, y, z)
+		this.props.update()
+	}
+
+	/**
+	 * @param {React.MouseEvent<HTMLTableDataCellElement, MouseEvent>} event
+	 */
+	setCursor(event) {
+		hover(this.props.tile)
+		this.props.update()
+	}
+
+	/**
+	 * @param {React.MouseEvent<HTMLTableDataCellElement, MouseEvent>} event
+	 */
+	setFlag(event) {
+		const { tile, update } = this.props
+		tile.flagged = !tile.flagged
+		update()
 	}
 }

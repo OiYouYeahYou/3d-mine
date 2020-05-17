@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { hover } from '../glue'
 import { Tile } from './Tile'
 
 export class Field extends Component {
@@ -14,7 +15,12 @@ export class Field extends Component {
 					display: 'inline-block',
 				}}
 			>
-				<table>
+				<table
+					onMouseLeave={event => {
+						hover(null)
+						update()
+					}}
+				>
 					<tbody>
 						{Object.values(map.rows).map((row, x) => (
 							<tr key={`row-${x}`}>
