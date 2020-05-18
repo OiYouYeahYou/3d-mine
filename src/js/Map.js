@@ -83,22 +83,4 @@ export class MineMap {
 
 		return bombs - flagged
 	}
-
-	get hasWon() {
-		const remaining = this.tileArray.filter(
-			tile => !tile.open && !tile.hasBomb
-		)
-
-		if (remaining.length === 0) {
-			return true
-		}
-
-		for (const tile of this.tileArray) {
-			if (tile.hasBomb !== tile.flagged) {
-				return false
-			}
-		}
-
-		return true
-	}
 }
