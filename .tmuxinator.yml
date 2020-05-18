@@ -1,0 +1,11 @@
+name: 3d-mine
+root: ~/code/3d-mine
+startup_window: main
+startup_pane: 1
+
+windows:
+    - main:
+          layout: even-vertical
+          panes:
+              - BROWSER=none yarn start
+              - git st
