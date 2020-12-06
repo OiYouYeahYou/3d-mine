@@ -1,10 +1,10 @@
 import './App.css'
 import { Game } from './js/Game'
 
-const layers = 12
-const height = 20
-const width = 20
-const bombsToStart = 250
+const layers = 4
+const height = 12
+const width = 12
+const bombsToStart = 25
 
 export let game
 export let reveal = false
